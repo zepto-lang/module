@@ -1,0 +1,29 @@
+(define *modules* [])
+
+(define (import name)
+   (letrec ((get-from-modules (lambda (m n)
+      (if (null? m)
+        [:foo :not-found]
+        (if (eqv? (car m) (car (string:split n #\:)))
+          (let ((filtered (filter (lambda (x) (eqv? (car x) n)) (cadr m))))
+            (cond 
+              ((= (length filtered) 0) [:foo :not-found])
+              ((= (length filtered) 1) (head filtered))
+              (else [:foo :ambiguous])))
+          (get-from-modules (cdr m) n))))))
+   (cadr (get-from-modules *modules* name))))
+
+(define-syntax module
+  (syntax-rules ()
+    ((module:define name (export exports ...) x ...)
+      (letrec* (x ...)
+      (set! *modules*
+        (++ *modules*
+          (list name
+            (map (lambda (y) 
+              (list (++ name
+                (if (atom? (car y))
+                  (symbol->string (car y))
+                  (++ ":" (car y))))
+                (cadr y)))
+              (list exports ...)))))))))
