@@ -4,7 +4,8 @@ A minimal module system for zepto. It is in early alpha.
 
 # Usage
 
-After importing `module.zp`, you can create and import modules like so:
+You can create and import modules like so (no need to import the file,
+as it is part of the standard library):
 ```clojure
 (load "module.zp")
 (module "mathematica"
@@ -32,6 +33,19 @@ After importing `module.zp`, you can create and import modules like so:
 => No documentation available
   source: (lambda ("a" "b") ...)
 ```
+
+Modules can also, be extended, like so:
+
+```clojure
+(module-extend "mathematica"
+  (export (list :divisor divisor))
+
+  (divisor (lambda (a b) (/ a b))))
+```
+
+Please note that current references to the library need to be updated
+if that happens after already importing the library and private properties
+are not available in the extension (sorry).
 
 <br/>
 
