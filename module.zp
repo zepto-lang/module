@@ -1,29 +1,30 @@
-(define *modules* [])
+(define *modules* (make-hash))
 
 (define (import name)
-   (letrec ((get-from-modules (lambda (m n)
-      (if (null? m)
-        [:foo :not-found]
-        (if (eqv? (car m) (car (string:split n #\:)))
-          (let ((filtered (filter (lambda (x) (eqv? (car x) n)) (cadr m))))
-            (cond 
-              ((= (length filtered) 0) [:foo :not-found])
-              ((= (length filtered) 1) (head filtered))
-              (else [:foo :ambiguous])))
-          (get-from-modules (cdr m) n))))))
-   (cadr (get-from-modules *modules* name))))
+  (if (not (in name #\:))
+    (if (hash:contains? *modules* name)
+      (*modules* name)
+      :no)
+    (let* ((fullname (string:split name #\:))
+           (module (car fullname))
+           (function (cadr fullname)))
+      (if (hash:contains? *modules* module)
+        (if (hash:contains? (*modules* module) function)
+            ((*modules* module) function)
+            :no)
+        :no))))
 
 (define-syntax module
   (syntax-rules ()
     ((module:define name (export exports ...) x ...)
       (letrec* (x ...)
       (set! *modules*
-        (++ *modules*
-          (list name
-            (map (lambda (y) 
-              (list (++ name
-                (if (atom? (car y))
-                  (symbol->string (car y))
-                  (++ ":" (car y))))
-                (cadr y)))
-              (list exports ...)))))))))
+        (make-hash *modules*
+          (make-hash name
+            (make-hash
+            (map 
+              (lambda (el)
+                (if (atom? (car el)) 
+                  (cons (string:tail (symbol->string (car el))) (cdr el))
+                  el))
+              (list exports ...))))))))))
