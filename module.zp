@@ -16,30 +16,32 @@
 
 (define-syntax module
   (syntax-rules ()
-    ((module name (export exports ...) x ...)
+    ((module name (export exports ...) (preface loads ...) x ...)
       (letrec* (x ...)
-      (set! *modules*
-        (make-hash *modules*
-          (make-hash name
-            (make-hash
-            (map 
-              (lambda (el)
-                (if (atom? (car el)) 
-                  (cons (string:tail (symbol->string (car el))) (cdr el))
-                  el))
-              (list exports ...))))))))))
+        (set! *modules*
+          (make-hash *modules*
+            (make-hash name
+              (make-hash
+              (map
+                (lambda (el) "build the module map"
+                  (if (atom? (car el)) 
+                    (cons (string:tail (symbol->string (car el))) (cdr el))
+                    el))
+                (list exports ...))))))))))
 
 (define-syntax module-extend
-  (syntax-rules ()
-    ((module-extend name (export exports ...) x ...)
-      (letrec* (x ...)
-      (set! *modules*
-        (make-hash *modules*
-          (make-hash (*modules* name)
-            (make-hash
-            (map 
-              (lambda (el)
-                (if (atom? (car el)) 
-                  (cons (string:tail (symbol->string (car el))) (cdr el))
-                  el))
-              (list exports ...))))))))))
+(syntax-rules ()
+  ((module-extend name (export exports ...) (preface loads ...) x ...)
+    (letrec* (x ...)
+      (begin
+        loads ...
+        (set! *modules*
+          (make-hash *modules*
+            (make-hash (*modules* name)
+              (make-hash
+              (map 
+                (lambda (el)
+                  (if (atom? (car el)) 
+                    (cons (string:tail (symbol->string (car el))) (cdr el))
+                    el))
+                (list exports ...)))))))))))
