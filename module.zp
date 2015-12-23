@@ -1,7 +1,7 @@
 (define *modules* (make-hash))
 
 (define (import name)
-  (if (not (in name #\:))
+  (if (not (in? name #\:))
     (if (hash:contains? *modules* name)
       (*modules* name)
       :no)
