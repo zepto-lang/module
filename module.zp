@@ -31,10 +31,9 @@
 
 (define-syntax module-extend
 (syntax-rules ()
-  ((module-extend name (export exports ...) (preface loads ...) x ...)
+  ((module-extend name (export exports ...) x ...)
     (letrec* (x ...)
       (begin
-        loads ...
         (set! *modules*
           (make-hash *modules*
             (make-hash (*modules* name)
