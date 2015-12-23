@@ -16,7 +16,7 @@
 
 (define-syntax module
   (syntax-rules ()
-    ((module name (export exports ...) (preface loads ...) x ...)
+    ((module name (export exports ...) x ...)
       (letrec* (x ...)
         (set! *modules*
           (make-hash *modules*
