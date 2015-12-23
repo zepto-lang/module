@@ -1,8 +1,7 @@
-(load "module.zp")
 (module "mathematica"
   (export
-    (list :adder adder)
-    (list :subtractor subtractor)
+    (list "adder" adder)
+    (list "subtractor" subtractor)
     (list "multiplicator" multiplicator))
 
   (mather (lambda (scheme a b) (scheme a b)))
