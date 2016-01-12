@@ -14,6 +14,17 @@
             :no)
         :no))))
 
+(define-syntax import-all
+  (syntax-rules ()
+    ((import-all name)
+      (if (hash:contains? *modules* name)
+        (let ((ns (current-env)))
+          (hash:kv-map
+            (lambda (kv)
+              (eval `(define ,(string->symbol (++ name ":" (head kv))) (quote ,(cadr kv))) ns))
+            (*modules* name)))
+        :no))))
+
 (define-syntax module
   (syntax-rules ()
     ((module name (export exports ...) x ...)
