@@ -6,11 +6,11 @@
       (*modules* name)
       :no)
     (let* ((fullname (string:split name #\:))
-           (module (car fullname))
+           (modl (car fullname))
            (function (cadr fullname)))
-      (if (hash:contains? *modules* module)
-        (if (hash:contains? (*modules* module) function)
-            ((*modules* module) function)
+      (if (hash:contains? *modules* modl)
+        (if (hash:contains? (*modules* modl) function)
+            ((*modules* modl) function)
             :no)
         :no))))
 
@@ -43,17 +43,18 @@
                 (list exports ...))))))))))
 
 (define-syntax module-extend
-(syntax-rules ()
-  ((module-extend name (export exports ...) x ...)
-    (letrec* (x ...)
-      (begin
-        (set! *modules*
-          (make-hash *modules*
-            (make-hash (*modules* name)
-              (make-hash
-              (map 
-                (lambda (el)
-                  (if (atom? (car el)) 
-                    (cons (string:tail (symbol->string (car el))) (cdr el))
-                    el))
-                (list exports ...)))))))))))
+  (syntax-rules ()
+    ((module-extend name (export exports ...) x ...)
+      (letrec* (x ...)
+        (begin
+          (set! *modules*
+            (make-hash *modules*
+              (make-hash name
+                (make-hash (*modules* name)
+                  (make-hash
+                    (map 
+                      (lambda (el)
+                        (if (atom? (car el)) 
+                          (cons (string:tail (symbol->string (car el))) (cdr el))
+                          el))
+                      (list exports ...))))))))))))

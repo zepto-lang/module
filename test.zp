@@ -1,3 +1,5 @@
+(load "module")
+
 (module "mathematica"
   (export
     (list "adder" adder)
@@ -8,3 +10,9 @@
   (adder (lambda (a b) (mather + a b)))
   (subtractor (lambda (a b) (mather - a b)))
   (multiplicator (lambda (a b) (mather * a b))))
+
+(module-extend "mathematica"
+  (export
+    (list "dividor" dividor))
+
+  (dividor (lambda (a b) (error "Insecure operation"))))
