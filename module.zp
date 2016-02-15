@@ -57,6 +57,7 @@
     ((module-extend name (export exports ...) x ...)
       (letrec* (x ...)
         (begin
+          (import-all name)
           (set! *modules*
             (make-hash *modules*
               (make-hash name
