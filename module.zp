@@ -36,36 +36,41 @@
       (let ((env (current-env)))
         (begin
           (map
-            (lambda (file) (map eval (macro-expand (parse file) env)))
-            (list load ...))
+            (lambda (file) (map (lambda (m) (eval m env)) (macro-expand (parse file))))
+            'load)
           (module name (export exports ...) x ...))))))
     ((module name (export exports ...) x ...)
       (letrec* (x ...)
-        (set! *modules*
-          (make-hash *modules*
-            (make-hash name
-              (make-hash
-              (map
-                (lambda (el) "build the module map"
-                  (if (atom? (car el)) 
-                    (cons (string:tail (symbol->string (car el))) (cdr el))
-                    el))
-                (list exports ...))))))))))
+        (hash:set! *modules* name
+          (make-hash
+            (map
+              (lambda (el) "build the module map"
+                (if (atom? (car el)) 
+                  (cons (string:tail (symbol->string (car el))) (cdr el))
+                  el))
+              (list exports ...))))))))
 
 (define-syntax module-extend
   (syntax-rules (export loads)
+    ((module name (export exports ...) (loads load ...) x ...)
+     ((lambda ()
+      (let ((env (current-env)))
+        (begin
+          (map
+            (lambda (file) (map (lambda (m) (eval m env)) (macro-expand (parse file))))
+            'load)
+          (module-extend name (export exports ...) x ...))))))
     ((module-extend name (export exports ...) x ...)
       (letrec* (x ...)
         (begin
           (import-all name)
-          (set! *modules*
-            (make-hash *modules*
-              (make-hash name
-                (make-hash (*modules* name)
-                  (make-hash
-                    (map 
-                      (lambda (el)
-                        (if (atom? (car el)) 
-                          (cons (string:tail (symbol->string (car el))) (cdr el))
-                          el))
-                      (list exports ...))))))))))))
+          (hash:update! *modules* name
+            (lambda (h)
+              (make-hash h
+                (make-hash
+                  (map 
+                    (lambda (el)
+                      (if (atom? (car el)) 
+                        (cons (string:tail (symbol->string (car el))) (cdr el))
+                        el))
+                    (list exports ...)))))))))))
