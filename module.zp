@@ -31,13 +31,13 @@
   (syntax-rules (export loads)
     ((module name)
      (set! *modules* (make-hash *modules* (make-hash name #{}))))
-    ((module name (export exports ...) (loads load ...) x ...)
+    ((module name (export exports ...) (loads files ...) x ...)
      ((lambda ()
       (let ((env (current-env)))
         (begin
           (map
-            (lambda (file) (map (lambda (m) (eval m env)) (macro-expand (parse file))))
-            'load)
+            (lambda (file) (load file env))
+            'files)
           (module name (export exports ...) x ...))))))
     ((module name (export exports ...) x ...)
       (letrec* (x ...)
@@ -52,13 +52,13 @@
 
 (define-syntax module-extend
   (syntax-rules (export loads)
-    ((module name (export exports ...) (loads load ...) x ...)
+    ((module name (export exports ...) (loads files ...) x ...)
      ((lambda ()
       (let ((env (current-env)))
         (begin
           (map
-            (lambda (file) (map (lambda (m) (eval m env)) (macro-expand (parse file))))
-            'load)
+            (lambda (file) (load files env))
+            'files)
           (module-extend name (export exports ...) x ...))))))
     ((module-extend name (export exports ...) x ...)
       (letrec* (x ...)
