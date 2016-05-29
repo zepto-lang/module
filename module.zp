@@ -16,6 +16,13 @@
 
 (define-syntax import-all
   (syntax-rules ()
+    ((import-all name to env)
+      (if (hash:contains? *modules* name)
+        (hash:kv-map
+          (lambda (kv)
+            (eval `(define ,(string->symbol (++ to ":" (head kv))) (quote ,(cadr kv))) env))
+          (*modules* name))
+        :no))
     ((import-all name to)
       (if (hash:contains? *modules* name)
         (let ((ns (current-env)))
