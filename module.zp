@@ -24,13 +24,8 @@
           (*modules* name))
         :no))
     ((import-all name to)
-      (if (hash:contains? *modules* name)
-        (let ((ns (current-env)))
-          (hash:kv-map
-            (lambda (kv)
-              (eval `(define ,(string->symbol (++ to ":" (head kv))) (quote ,(cadr kv))) ns))
-            (*modules* name)))
-        :no))
+      (let ((env (current-env)))
+        (import-all name to env)))
     ((import-all name)
       (import-all name name))))
 
