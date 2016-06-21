@@ -17,34 +17,65 @@
                   :no)
               :no)))))))
 
-(define-syntax module
+(define-syntax import-all
   (syntax-rules ()
-    ((module name (export exports ...) (preface loads ...) x ...)
+    ((import-all name to env)
+      (if (hash:contains? *modules* name)
+        (hash:kv-map
+          (lambda (kv)
+            (eval `(define ,(string->symbol (++ to ":" (head kv))) (quote ,(cadr kv))) env))
+          (*modules* name))
+        :no))
+    ((import-all name to)
+      (let ((env (current-env)))
+        (import-all name to env)))
+    ((import-all name)
+      (import-all name name))))
+
+(define-syntax module
+  (syntax-rules (export loads)
+    ((module name)
+     (set! *modules* (make-hash *modules* (make-hash name #{}))))
+    ((module name (export exports ...) (loads files ...) x ...)
+     ((lambda ()
+      (let ((env (current-env)))
+        (begin
+          (map
+            (lambda (file) (load file env))
+            'files)
+          (module name (export exports ...) x ...))))))
+    ((module name (export exports ...) x ...)
       (letrec* (x ...)
-        (set! *modules*
-          (make-hash *modules*
-            (make-hash name
-              (make-hash
-              (map
-                (lambda (el) "build the module map"
-                  (if (atom? (car el)) 
-                    (cons (string:tail (symbol->string (car el))) (cdr el))
-                    el))
-                (list exports ...))))))))))
+        (hash:set! *modules* name
+          (make-hash
+            (map
+              (lambda (el) "build the module map"
+                (if (atom? (car el)) 
+                  (cons (string:tail (symbol->string (car el))) (cdr el))
+                  el))
+              (list exports ...))))))))
 
 (define-syntax module-extend
-(syntax-rules ()
-  ((module-extend name (export exports ...) (preface loads ...) x ...)
-    (letrec* (x ...)
-      (begin
-        loads ...
-        (set! *modules*
-          (make-hash *modules*
-            (make-hash (*modules* name)
-              (make-hash
-              (map 
-                (lambda (el)
-                  (if (atom? (car el)) 
-                    (cons (string:tail (symbol->string (car el))) (cdr el))
-                    el))
-                (list exports ...)))))))))))
+  (syntax-rules (export loads)
+    ((module name (export exports ...) (loads files ...) x ...)
+     ((lambda ()
+      (let ((env (current-env)))
+        (begin
+          (map
+            (lambda (file) (load file env))
+            'files)
+          (module-extend name (export exports ...) x ...))))))
+    ((module-extend name (export exports ...) x ...)
+      (letrec* (x ...)
+        (begin
+          (import-all name)
+          (hash:update! *modules* name
+            (lambda (h)
+              (make-hash h
+                (make-hash
+                  (map 
+                    (lambda (el)
+                      (if (atom? (car el)) 
+                        (cons (string:tail (symbol->string (car el))) (cdr el))
+                        el))
+                    (list exports ...)))))))))))
