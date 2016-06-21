@@ -59,7 +59,7 @@
       (let ((env (current-env)))
         (begin
           (map
-            (lambda (file) (load files env))
+            (lambda (file) (load file env))
             'files)
           (module-extend name (export exports ...) x ...))))))
     ((module-extend name (export exports ...) x ...)
