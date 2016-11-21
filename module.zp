@@ -79,3 +79,5 @@
                         (cons (string:tail (symbol->string (car el))) (cdr el))
                         el))
                     (list exports ...)))))))))))
+
+(load "module/lang")
