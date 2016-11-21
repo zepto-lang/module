@@ -1,4 +1,12 @@
 (let ()
+  (define (def-fun env exp)
+    (cond
+      ((symbol? exp) (cons (symbol->string exp) `(,(eval exp env))))
+      ((and (eq? (length exp) 3) (eq? :as (cadr exp)))
+        (cons (symbol->string (caddr exp)) `(,(eval (car exp) env))))
+      (else
+        (error:from-string (++ "Unknown form in export: " (->string exp))))))
+
   (define (parse-mod str)
     (let* ((lines   (string:split str "\n"))
            (name    (string:trim (string:substitute (car lines) "#lang module" "")))
@@ -7,17 +15,14 @@
            (exports (filter ($ (eq? (car %) 'export)) code))
            (exports (reduce ++ [] (map cdr exports)))
            (code    (filter ($ (not (eq? (car %) 'export))) code))
-           (env     (current-env)))
+           (env     (current-env))
+           (def-fun (curry def-fun env)))
+      (hash:kv-map ($ (eval `(define ,(string->symbol (car %)) ,(cadr %)) env))
+                   (get-from *modules* name #{}))
       (map ($ (eval % env)) (macro-expand code))
-      `((hash:set! *modules* ,name
-          ,(make-hash
-              (map ($ (cond
-                        ((symbol? %)
-                          (cons (symbol->string %) `(,(eval %))))
-                        ((and (eq? (length %) 3) (eq? :as (cadr %)))
-                          (cons (symbol->string (caddr %)) `(,(eval (car %)))))
-                        (else
-                          (error:from-string (++ "Unknown form in export: "
-                                                 (->string %))))))
-                   exports))))))
+      (if (in? *modules* name)
+        `((hash:update! *modules* ,name
+          ,($ (hash:merge % (make-hash (map def-fun exports))))))
+        `((hash:set! *modules* ,name
+            ,(make-hash (map def-fun exports)))))))
   (zepto:implements-lang parse-mod "module"))
